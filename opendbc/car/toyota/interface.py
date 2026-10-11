@@ -90,7 +90,7 @@ class CarInterface(CarInterfaceBase):
 
     ret.radarUnavailable = Bus.radar not in DBC[candidate]
 
-    # since we don't yet parse radar on TSS2 radar-based ACC cars, gate longitudinal behind alpha toggle
+    # TSS2 radar-based ACC cars: only the ARS510 is parsed (ars510_radar.py); gate longitudinal behind alpha toggle
     if ret.flags & ToyotaFlags.RADAR_ACC:
       ret.alphaLongitudinalAvailable = True
 

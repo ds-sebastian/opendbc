@@ -104,6 +104,11 @@ class ToyotaSecOcCarDocs(ToyotaCarDocs):
   support_link: str = "#secoc-cars-with-recoverable-keys"
 
 
+# Continental ARS510 front radar (fwdRadar 8821F0R03100) on radar-ACC RAV4s: its 0x80 object list is reassembled and
+# filtered in ars510_radar.py; this DBC describes the ACC target frames the filter fuses
+ARS510_RADAR = 'toyota_tss2_ars510'
+
+
 @dataclass
 class ToyotaTSS2PlatformConfig(PlatformConfig):
   dbc_dict: dict = field(default_factory=lambda: dbc_dict('toyota_nodsu_pt_generated', 'toyota_tss2_adas'))
@@ -111,7 +116,7 @@ class ToyotaTSS2PlatformConfig(PlatformConfig):
   def init(self):
     self.flags |= ToyotaFlags.TSS2 | ToyotaFlags.NO_DSU
 
-    if self.flags & ToyotaFlags.RADAR_ACC:
+    if self.flags & ToyotaFlags.RADAR_ACC and self.dbc_dict.get(Bus.radar) != ARS510_RADAR:
       self.dbc_dict = {Bus.pt: 'toyota_nodsu_pt_generated'}
 
 
@@ -276,6 +281,7 @@ class CAR(Platforms):
       ToyotaCarDocs("Toyota RAV4 Hybrid 2022", video="https://youtu.be/U0nH9cnrFB0"),
     ],
     TOYOTA_RAV4_TSS2.specs,
+    dbc_dict('toyota_nodsu_pt_generated', ARS510_RADAR),
     flags=ToyotaFlags.RADAR_ACC,
   )
   TOYOTA_RAV4_TSS2_2023 = ToyotaTSS2PlatformConfig(
@@ -284,6 +290,7 @@ class CAR(Platforms):
       ToyotaCarDocs("Toyota RAV4 Hybrid 2023-25", video="https://youtu.be/4eIsEq4L4Ng"),
     ],
     TOYOTA_RAV4_TSS2.specs,
+    dbc_dict('toyota_nodsu_pt_generated', ARS510_RADAR),
     flags=ToyotaFlags.RADAR_ACC | ToyotaFlags.ANGLE_CONTROL,
   )
   TOYOTA_RAV4_PRIME = ToyotaSecOCPlatformConfig(
