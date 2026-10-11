@@ -36,7 +36,7 @@ class RadarInterface(RadarInterfaceBase):
 
     self.valid_cnt = {key: 0 for key in self.RADAR_A_MSGS}
 
-    self.ars510 = Ars510RadarInterface(CP) if DBC[CP.carFingerprint].get(Bus.radar) == ARS510_RADAR else None
+    self.ars510 = Ars510RadarInterface(CP) if not CP.radarUnavailable and DBC[CP.carFingerprint].get(Bus.radar) == ARS510_RADAR else None
     self.rcp = None if CP.radarUnavailable or self.ars510 is not None else _create_radar_can_parser(CP)
     self.trigger_msg = self.RADAR_B_MSGS[-1]
     self.updated_messages = set()

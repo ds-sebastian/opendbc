@@ -107,6 +107,7 @@ class ToyotaSecOcCarDocs(ToyotaCarDocs):
 # Continental ARS510 front radar (fwdRadar 8821F0R03100) on radar-ACC RAV4s: its 0x80 object list is reassembled and
 # filtered in ars510_radar.py; this DBC describes the ACC target frames the filter fuses
 ARS510_RADAR = 'toyota_tss2_ars510'
+ARS510_FW_VERSIONS = {b'\x018821F0R03100\x00\x00\x00\x00'}
 
 
 @dataclass
