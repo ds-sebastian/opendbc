@@ -2,7 +2,7 @@ from opendbc.car import Bus, structs, get_safety_config, uds
 from opendbc.car.toyota.carstate import CarState
 from opendbc.car.toyota.carcontroller import CarController
 from opendbc.car.toyota.radar_interface import RadarInterface
-from opendbc.car.toyota.values import ARS510_FW_VERSIONS, ARS510_RADAR, Ecu, CAR, DBC, ToyotaFlags, CarControllerParams, MIN_ACC_SPEED, \
+from opendbc.car.toyota.values import Ecu, CAR, DBC, ToyotaFlags, CarControllerParams, MIN_ACC_SPEED, \
                                                   EPS_SCALE, ToyotaSafetyFlags
 from opendbc.car.disable_ecu import disable_ecu
 from opendbc.car.interfaces import CarInterfaceBase
@@ -89,12 +89,8 @@ class CarInterface(CarInterfaceBase):
       ret.flags |= ToyotaFlags.HAS_BSM.value
 
     ret.radarUnavailable = Bus.radar not in DBC[candidate]
-    if DBC[candidate].get(Bus.radar) == ARS510_RADAR:
-      # radar-ACC RAV4s: only the Continental ARS510 sends its object list (0x80) on bus 1; other radars stay radarless
-      ars510_fw = any(fw.ecu == Ecu.fwdRadar and fw.fwVersion in ARS510_FW_VERSIONS for fw in car_fw)
-      ret.radarUnavailable = not (ars510_fw or 0x80 in fingerprint[1])
 
-    # TSS2 radar-based ACC cars: only the ARS510 is parsed (ars510_radar.py); gate longitudinal behind alpha toggle
+    # since we don't yet parse radar on TSS2 radar-based ACC cars, gate longitudinal behind alpha toggle
     if ret.flags & ToyotaFlags.RADAR_ACC:
       ret.alphaLongitudinalAvailable = True
 

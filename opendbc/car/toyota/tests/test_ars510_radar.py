@@ -3,7 +3,7 @@ import zlib
 
 from opendbc.car import gen_empty_fingerprint, structs
 from opendbc.car.toyota.interface import CarInterface
-from opendbc.car.toyota.values import ARS510_FW_VERSIONS, CAR
+from opendbc.car.toyota.values import CAR
 from opendbc.car.toyota.ars510_radar import IDLE_SLOT, RECORD_LEN, SLOT_LEN, SLOT_START, SLOTS, RadarInterface
 
 EGO_SPEED = 18.0  # m/s
@@ -50,21 +50,13 @@ class TestArs510Radar(unittest.TestCase):
     assert all(o is None or (len(o.points) == 0 and not o.errors.radarUnavailableTemporary) for o in outs[:5])  # radarless at 20 Hz before the first record
     return outs[5]
 
-  def test_detection(self):
-    """Only an ARS510 (known radar FW, or its object list on bus 1 at fingerprinting) enables radar; other radars stay radarless."""
-    def params(car, radar_fw, objects_on_bus1):
-      fingerprint = gen_empty_fingerprint()
-      if objects_on_bus1:
-        fingerprint[1][0x80] = 8
-      car_fw = [structs.CarParams.CarFw(ecu="fwdRadar", fwVersion=radar_fw, address=0x750, subAddress=0xf)]
-      return CarInterface.get_params(car, fingerprint, car_fw, False, False, False)
-
-    ars510_fw, other_fw = next(iter(ARS510_FW_VERSIONS)), b'\x018821F0R01100\x00\x00\x00\x00'
+  def test_radar_available_on_the_rav4s_only(self):
+    # both RAV4 radar firmwares (8821F0R01100, 8821F0R03100) are the ARS510: the car model selects the parser
     for car in (CAR.TOYOTA_RAV4_TSS2_2022, CAR.TOYOTA_RAV4_TSS2_2023):
-      assert not params(car, ars510_fw, False).radarUnavailable  # cold start: the radar is not sending yet
-      assert not params(car, other_fw, True).radarUnavailable
-      CP = params(car, other_fw, False)
-      assert CP.radarUnavailable and CarInterface.RadarInterface(CP).ars510 is None
+      CP = CarInterface.get_params(car, gen_empty_fingerprint(), [], False, False, False)
+      assert not CP.radarUnavailable and CarInterface.RadarInterface(CP).ars510 is not None
+    for car in (CAR.TOYOTA_CHR_TSS2, CAR.TOYOTA_YARIS):
+      assert CarInterface.get_params(car, gen_empty_fingerprint(), [], False, False, False).radarUnavailable
 
   def test_young_tracks_held_back_then_published(self):
     reports = [self.send(record(age)) for age in range(55, 75)]
