@@ -18,7 +18,7 @@ def set_bits(slot: bytearray, start: int, length: int, value: int) -> None:
 def record(age: int, d_rel: float = 40.0, y_rel: float = 1.5, v_ground: float = 20.0, unc: int = 5) -> bytes:
   slot = bytearray(IDLE_SLOT)
   for start, length, value in ((24, 7, age), (32, 12, round(d_rel * 16) + 160), (44, 12, round(y_rel / 0.015) + 2048),
-                               (64, 10, round(v_ground / 0.149 + 510.5)), (240, 7, unc), (56, 7, 1)):
+                               (64, 10, round(v_ground / 0.15 + 510.5)), (240, 7, unc), (56, 7, 1)):
     set_bits(slot, start, length, value)
   rec = bytearray(RECORD_LEN)
   rec[0] = 0xE4
@@ -66,7 +66,7 @@ class TestArs510Radar(unittest.TestCase):
     p = pts[-1]
     assert abs(p.yRel - 1.5) < 1e-6
     assert abs(p.dRel - 40.0) < 2.5  # velocity-aided range settles a little away from a range held fixed while vRel != 0
-    assert abs(p.vRel - (20.0 - EGO_SPEED)) < 0.1
+    assert abs(p.vRel - (20.0 - EGO_SPEED / 0.9865)) < 0.1  # 0xB4 is put on the carState vEgo scale
 
   def test_crc_failure_dropped(self):
     rec = bytearray(record(80))
