@@ -2,7 +2,8 @@
 from opendbc.can import CANParser
 from opendbc.car import Bus
 from opendbc.car.structs import RadarData
-from opendbc.car.toyota.values import DBC, ToyotaFlags
+from opendbc.car.toyota.values import ARS510_RADAR, DBC, ToyotaFlags
+from opendbc.car.toyota.ars510_radar import RadarInterface as Ars510RadarInterface
 from opendbc.car.interfaces import RadarInterfaceBase
 
 
@@ -35,11 +36,14 @@ class RadarInterface(RadarInterfaceBase):
 
     self.valid_cnt = {key: 0 for key in self.RADAR_A_MSGS}
 
-    self.rcp = None if CP.radarUnavailable else _create_radar_can_parser(CP)
+    self.ars510 = Ars510RadarInterface(CP) if not CP.radarUnavailable and DBC[CP.carFingerprint].get(Bus.radar) == ARS510_RADAR else None
+    self.rcp = None if CP.radarUnavailable or self.ars510 is not None else _create_radar_can_parser(CP)
     self.trigger_msg = self.RADAR_B_MSGS[-1]
     self.updated_messages = set()
 
   def update(self, can_strings):
+    if self.ars510 is not None:
+      return self.ars510.update(can_strings)
     if self.rcp is None:
       return super().update(None)
 
