@@ -65,6 +65,16 @@ class TestToyotaInterfaces(unittest.TestCase):
     pt, = reports[-1].points
     assert pt.trackId == 7 and abs(pt.dRel - 61.5) < 1e-6 and abs(pt.yRel - 0.42) < 1e-6 and abs(pt.vRel + 3.25) < 1e-6
 
+  def test_ars510_pcs_alarm(self):
+    # The radar's PCS alarm on its own bus is the car's FCW; its first frame after power-up (FF FF) is not
+    CI = CarInterface(get_params(CAR.TOYOTA_RAV4_TSS2_2023))
+    packer = CANPacker("toyota_tss2_ars510")
+    for i, (values, fcw) in enumerate((({"PCS_ALARM": 1, "POWER_UP": 255}, False), ({"PCS_ALARM": 1}, True), ({}, False))):
+      CS = CI.update([(int(i * 1e8), [packer.make_can_msg("PCS_STATE", 1, values)])])
+      assert CS.stockFcw == fcw
+    CI.update([(int(5e9), [])])
+    assert CI.can_parsers[Bus.radar].can_valid  # a quiet radar bus never makes CAN invalid
+
   def test_essential_ecus(self):
     # Asserts standard ECUs exist for each platform
     common_ecus = {Ecu.fwdRadar, Ecu.fwdCamera}
